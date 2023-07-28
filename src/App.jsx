@@ -1,26 +1,32 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
 import Webcam from "react-webcam";
 
 function App() {
-  const [isPip, setIsPip] = useState(false);
+  const [isInPip, setIsInPip] = useState(false);
 
-  const requestPip = () => {
+  const requestPip = async () => {
     const video = document.querySelector("video");
-    if (video) {
-      if (checkPipSupport()) {
-        if (isPip) {
-          document.exitPictureInPicture();
-        } else {
-          video.requestPictureInPicture();
-        }
-        setIsPip(!isPip);
-      } else {
-        alert("Picture in Picture is not supported in your browser");
-      }
-    }
+
+    if (checkIsInPip()) return;
+    if (checkOldSafariPipSupport())
+      await video.webkitSetPresentationMode("picture-in-picture");
+    if (checkModernPipSupport()) await video.requestPictureInPicture();
+    syncPipState();
+  };
+
+  const exitPip = async () => {
+    const video = document.querySelector("video");
+
+    if (!checkIsInPip()) return;
+    if (checkOldSafariPipSupport())
+      await video.webkitSetPresentationMode("inline");
+    if (checkModernPipSupport()) await document?.exitPictureInPicture();
+    syncPipState();
+  };
+
+  const onPress = async () => {
+    return checkIsInPip() ? exitPip() : requestPip();
   };
 
   const checkPip = () =>
@@ -46,16 +52,18 @@ function App() {
     );
   };
 
-  const checkPipSupport = () =>
-    checkOldSafariPipSupport() || checkModernPipSupport();
+  const syncPipState = () => setIsInPip(checkIsInPip());
+  const checkIsInPip = () => Boolean(document.pictureInPictureElement);
 
   return (
-    <>
-      <Webcam />
-      <button onClick={requestPip}>
-        {isPip ? "Exit" : "Request"} Picture in Picture
+    <div
+      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+    >
+      <Webcam style={{ width: "100%", maxWidth: "768px" }} />
+      <button onClick={onPress} style={{ marginTop: "2rem" }}>
+        {isInPip ? "Exit" : "Request"} Picture in Picture
       </button>
-    </>
+    </div>
   );
 }
 
