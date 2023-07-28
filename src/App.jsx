@@ -5,17 +5,26 @@ import "./App.css";
 import Webcam from "react-webcam";
 
 function App() {
+  const [isPip, setIsPip] = useState(false);
+
   const requestPip = () => {
     const video = document.querySelector("video");
     if (video) {
-      video.requestPictureInPicture();
+      if (isPip) {
+        document.exitPictureInPicture();
+      } else {
+        video.requestPictureInPicture();
+      }
+      setIsPip(!isPip);
     }
   };
 
   return (
     <>
       <Webcam />
-      <button onClick={requestPip}>Request Picture in Picture</button>
+      <button onClick={requestPip}>
+        {isPip ? "Exit" : "Request"} Picture in Picture
+      </button>
     </>
   );
 }
