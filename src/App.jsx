@@ -10,14 +10,44 @@ function App() {
   const requestPip = () => {
     const video = document.querySelector("video");
     if (video) {
-      if (isPip) {
-        document.exitPictureInPicture();
+      if (checkPipSupport()) {
+        if (isPip) {
+          document.exitPictureInPicture();
+        } else {
+          video.requestPictureInPicture();
+        }
+        setIsPip(!isPip);
       } else {
-        video.requestPictureInPicture();
+        alert("Picture in Picture is not supported in your browser");
       }
-      setIsPip(!isPip);
     }
   };
+
+  const checkPip = () =>
+    "pictureInPictureEnabled" in document && document.pictureInPictureEnabled;
+
+  const checkOldSafariPipSupport = () => {
+    const video = document.createElement("video");
+
+    return (
+      checkPip() &&
+      video.webkitSupportsPresentationMode &&
+      typeof video.webkitSetPresentationMode === "function"
+    );
+  };
+
+  const checkModernPipSupport = () => {
+    const video = document.createElement("video");
+
+    return (
+      checkPip() &&
+      video.requestPictureInPicture &&
+      typeof video.requestPictureInPicture === "function"
+    );
+  };
+
+  const checkPipSupport = () =>
+    checkOldSafariPipSupport() || checkModernPipSupport();
 
   return (
     <>
